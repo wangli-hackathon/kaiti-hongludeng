@@ -9,6 +9,14 @@ import { SAMPLES } from "./samples.ts";
 import { ReportView } from "./components/ReportView.tsx";
 import { RulesDialog } from "./components/RulesDialog.tsx";
 import { SettingsDialog } from "./components/SettingsDialog.tsx";
+import { ArrowIcon, BookIcon, GearIcon, Logo, ShieldIcon } from "./components/Icons.tsx";
+
+const sampleLights: Record<string, Analysis["overall"]> = Object.fromEntries(
+  SAMPLES.map((sample) => [
+    sample.id,
+    analyzeProposal({ question: sample.question, abstract: sample.abstract, references: sample.references }).overall,
+  ]),
+);
 
 function sameInput(left: ProposalInput | null, right: ProposalInput): boolean {
   return Boolean(left && left.question === right.question && left.abstract === right.abstract && left.references === right.references);
@@ -107,42 +115,73 @@ export default function App() {
 
   return (
     <>
-      <header className="wrap topbar">
-        <div>
-          <div className="brand">
-            <div className="housing" aria-hidden="true">
-              <span className="bulb lit-green" />
-              <span className="bulb lit-amber" />
-              <span className="bulb lit-red" />
+      <nav className="nav no-print" aria-label="站点">
+        <div className="wrap nav-inner">
+          <div className="nav-brand">
+            <Logo size={30} />
+            <span className="nav-name">开题红绿灯</span>
+            <span className="nav-tag">StudyHack</span>
+          </div>
+          <div className="nav-actions">
+            <button type="button" className="btn ghost sm" onClick={() => setRulesOpen(true)}>
+              <BookIcon size={15} />
+              灯怎么打
+            </button>
+            <button type="button" className={hasKey ? "btn ghost sm configured" : "btn ghost sm"} onClick={() => setSettingsOpen(true)}>
+              <GearIcon size={15} />
+              {hasKey ? "模型已配置" : "模型设置"}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <header className="hero">
+        <div className="wrap hero-inner">
+          <div className="hero-copy">
+            <p className="eyebrow">
+              <ShieldIcon size={14} />
+              开题自查 · 规则引擎在本机运行
+            </p>
+            <h1>
+              见导师之前，
+              <br />
+              先给开题<span className="accent-text">过一遍灯</span>
+            </h1>
+            <p className="pitch">
+              把研究问题、摘要和文献贴进来。八个维度打成绿、黄、红，附上导师会问的五句话，和一份只干七件事的行动单。
+            </p>
+          </div>
+          <dl className="hero-stats">
+            <div>
+              <dt>8</dt>
+              <dd>项维度体检</dd>
             </div>
             <div>
-              <p className="eyebrow">StudyHack · 开题自查</p>
-              <h1>开题红绿灯</h1>
+              <dt>5</dt>
+              <dd>句导师反问</dd>
             </div>
-          </div>
-          <p className="pitch">
-            把研究问题、摘要和文献贴进来。八个维度打成绿、黄、红，附上导师会问的五句话，和一份只干七件事的行动单。
-          </p>
-        </div>
-        <div className="top-actions no-print">
-          <button type="button" className="btn ghost" onClick={() => setRulesOpen(true)}>灯怎么打</button>
-          <button type="button" className="btn secondary" onClick={() => setSettingsOpen(true)}>
-            {hasKey ? "模型已配置" : "模型设置"}
-          </button>
+            <div>
+              <dt>7</dt>
+              <dd>天行动清单</dd>
+            </div>
+          </dl>
         </div>
       </header>
 
       <main className="wrap layout">
         <div className="stack no-print">
           <section className="card" aria-labelledby="sample-title">
-            <h2 id="sample-title">三份示例卷宗</h2>
-            <p className="hint" style={{ margin: "6px 0 10px" }}>不同学科，灯色不一样。载入会覆盖当前草稿。</p>
+            <div className="card-head">
+              <h2 id="sample-title">示例卷宗</h2>
+              <span className="meta">载入会覆盖当前草稿</span>
+            </div>
             <div className="samples">
               {SAMPLES.map((sample) => (
                 <button
                   key={sample.id}
                   type="button"
                   className={activeSample === sample.id ? "sample active" : "sample"}
+                  aria-pressed={activeSample === sample.id}
                   onClick={() =>
                     publish(
                       { question: sample.question, abstract: sample.abstract, references: sample.references },
@@ -150,16 +189,24 @@ export default function App() {
                     )
                   }
                 >
-                  <strong>{sample.discipline} · {sample.title}</strong>
-                  <span>{sample.blurb}</span>
+                  <span className={`sample-dot ${sampleLights[sample.id]}`} aria-hidden="true" />
+                  <span className="sample-text">
+                    <span className="sample-kicker">{sample.discipline}</span>
+                    <strong>{sample.title}</strong>
+                    <span className="sample-blurb">{sample.blurb}</span>
+                  </span>
+                  <ArrowIcon size={16} className="sample-arrow" />
                 </button>
               ))}
             </div>
           </section>
 
           <section className="card" aria-labelledby="draft-title">
-            <h2 id="draft-title">你的草稿</h2>
-            <div className="field" style={{ marginTop: 12 }}>
+            <div className="card-head">
+              <h2 id="draft-title">你的草稿</h2>
+              <span className="meta">不上传服务器</span>
+            </div>
+            <div className="field">
               <div className="field-label">
                 <label htmlFor="question">研究问题</label>
                 <span className="meta">{charCount(question)} 字</span>
@@ -175,7 +222,7 @@ export default function App() {
                 }}
               />
             </div>
-            <div className="field" style={{ marginTop: 12 }}>
+            <div className="field">
               <div className="field-label">
                 <label htmlFor="abstract">摘要</label>
                 <span className="meta">{charCount(abstractText)} 字</span>
@@ -191,9 +238,9 @@ export default function App() {
                 }}
               />
             </div>
-            <div className="field" style={{ marginTop: 12 }}>
+            <div className="field">
               <div className="field-label">
-                <label htmlFor="references">参考文献（可选）</label>
+                <label htmlFor="references">参考文献<span className="optional">可选</span></label>
                 <span className="meta">{referenceCount} 条</span>
               </div>
               <textarea
@@ -207,12 +254,13 @@ export default function App() {
                 }}
               />
             </div>
-            {formError ? <p className="banner" style={{ marginTop: 12 }}>{formError}</p> : null}
-            <div className="actions" style={{ marginTop: 14 }}>
-              <button type="button" className="btn" onClick={() => publish(draft, activeSample)}>
+            {formError ? <p className="banner">{formError}</p> : null}
+            <div className="submit-row">
+              <button type="button" className="btn primary block" onClick={() => publish(draft, activeSample)}>
                 {analysis ? "重新生成自查报告" : "生成自查报告"}
+                <ArrowIcon size={16} />
               </button>
-              <span className="hint">Ctrl 或 ⌘ + Enter</span>
+              <span className="kbd-hint"><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>Enter</kbd></span>
             </div>
           </section>
         </div>
@@ -233,6 +281,7 @@ export default function App() {
       </main>
 
       <footer className="wrap footer no-print">
+        <Logo size={18} />
         自查工具，不能代替导师。规则在浏览器里运行；只有你在设置里填写并点击模型补写时，草稿才会发到那个接口。
       </footer>
       <p className="sr-only" aria-live="polite">
