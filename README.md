@@ -6,6 +6,8 @@
 
 这是 2026 Qoder 高校创造力大赛 **StudyHack** 赛道的作品草稿。截止时间是 **2026-11-30 18:00（北京时间）**。报名、学生认证、在 Qoder 里打开项目、部署到 Qoder Sites、到天池论坛发帖，都要使用参赛者本人的账号。
 
+**在线演示：** [https://wangli-hackathon.github.io/kaiti-hongludeng/](https://wangli-hackathon.github.io/kaiti-hongludeng/)（GitHub Pages，`gh-pages` 分支，由 `npm run build` 的 `dist/` 发布；纯静态，不需要密钥）。
+
 ## 本地运行
 
 需要 Node.js 22 左右。
@@ -113,3 +115,15 @@ dist/           npm run build 之后的静态文件
 ## 许可
 
 MIT，见 `LICENSE`。
+
+## 发布到 GitHub Pages
+
+`base: "./"` 让同一份 `dist/` 能挂在 `/kaiti-hongludeng/` 子路径下。发布步骤：
+
+```bash
+npm run selfcheck          # lint + 测试 + 构建
+# 把 dist/ 的内容提交到 gh-pages 分支根目录（附一个空的 .nojekyll）
+```
+
+仓库 Settings → Pages 的来源是 `gh-pages` 分支 `/`。
+
